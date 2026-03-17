@@ -9,7 +9,7 @@
   "create_blueprinted.gui.schematic_table.render_button.save_hint": "Результат сохраняется в папку «schematics».",
   "create_blueprinted.gui.schematic_table.render_button.chat_hint": "Ссылка на изображение будет также отправлена в чат.",
   "create_blueprinted.gui.schematic_table.render_button.chat_hint_visibility": "(Сообщение будет видно только вам.)",
-  "create_blueprinted.command.renderschem.not_found": "Ошибка: файл схематики «%s.nbt» не найдена.",
+  "create_blueprinted.command.renderschem.not_found": "Ошибка: файл схематики «%s.nbt» не найден.",
   "create_blueprinted.command.renderschem.starting": "Начат рендеринг схематики «%s» в фоне...",
   "create_blueprinted.command.renderschem.success": "Схематика отрендерена и сохранена: ",
   "create_blueprinted.command.renderschem.click_to_open": "Кликните, чтобы открыть изображение",
