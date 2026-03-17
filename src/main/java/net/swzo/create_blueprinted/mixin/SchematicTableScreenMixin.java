@@ -87,6 +87,7 @@ public abstract class SchematicTableScreenMixin extends Screen {
                 this.toolTip.add(Component.literal(" "));
                 this.toolTip.add(Component.translatable("create_blueprinted.gui.schematic_table.render_button.save_hint").withStyle(ChatFormatting.GRAY));
                 this.toolTip.add(Component.translatable("create_blueprinted.gui.schematic_table.render_button.chat_hint").withStyle(ChatFormatting.GRAY));
+                this.toolTip.add(Component.translatable("create_blueprinted.gui.schematic_table.render_button.chat_hint_visibility").withStyle(ChatFormatting.DARK_GRAY));
 
                 super.doRender(graphics, mouseX, mouseY, partialTicks);
             }

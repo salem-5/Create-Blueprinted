@@ -8,6 +8,7 @@
   "create_blueprinted.gui.schematic_table.render_button.dir.hint": " (Hold [%s] for Left)",
   "create_blueprinted.gui.schematic_table.render_button.save_hint": "Saves to the 'schematics' folder.",
   "create_blueprinted.gui.schematic_table.render_button.chat_hint": "The rendered image will be sent in chat.",
+  "create_blueprinted.gui.schematic_table.render_button.chat_hint_visibility": "(The message will be visible to you only.)",
   "create_blueprinted.command.renderschem.not_found": "Error: Schematic '%s.nbt' not found.",
   "create_blueprinted.command.renderschem.starting": "Starting background render for '%s'...",
   "create_blueprinted.command.renderschem.success": "Successfully rendered schematic to ",
