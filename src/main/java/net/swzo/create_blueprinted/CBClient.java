@@ -9,6 +9,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.swzo.create_blueprinted.command.RenderSchemCommand;
+import net.swzo.create_blueprinted.server.SchematicInfoServer;
 import net.swzo.create_blueprinted.server.SchematicRenderServer;
 
 public class CBClient {
@@ -18,6 +19,7 @@ public class CBClient {
     public static void onCtorClient(IEventBus modEventBus, IEventBus neoEventBus, ModContainer container) {
         neoEventBus.register(CBClient.class);
         SchematicRenderServer.start();
+        SchematicInfoServer.start();
         System.out.println("Started HeadlessMC");
     }
 
