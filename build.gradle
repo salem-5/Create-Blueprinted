@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'idea'
     id 'net.neoforged.moddev.legacyforge' version '2.0.140'
+    id 'me.modmuss50.mod-publish-plugin' version '2.0.1'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -99,3 +100,5 @@ idea {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 }
+
+apply from: rootProject.file('publish.gradle')

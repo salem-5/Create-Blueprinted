@@ -1,0 +1,97 @@
+// Publishing config shared by both branches (1.21.1/NeoForge and 1.20.1/Forge).
+// Credentials are read from an untracked .env file (env-var fallback); nothing secret is committed.
+// Applied from build.gradle after the mod-publish-plugin is on the plugins classpath.
+//
+//   ./gradlew publishMods --dry-run        # validate the task graph, upload nothing
+//   ./gradlew publishMods                  # upload this branch's version to CurseForge + Modrinth + GitHub
+//   ./gradlew publishMods -PpublishDryRun=true   # run the task but skip the real uploads
+//   ./gradlew syncModrinthDescription      # push README.md to the Modrinth project body
+
+def dotenv = [:]
+def envFile = rootProject.file('.env')
+if (envFile.exists()) {
+    envFile.eachLine { rawLine ->
+        def line = rawLine.trim()
+        if (!line || line.startsWith('#') || !line.contains('=')) return
+        def i = line.indexOf('=')
+        dotenv[line.substring(0, i).trim()] = line.substring(i + 1).trim().replaceAll(/^["']|["']$/, '')
+    }
+}
+ext.cred = { String key -> (dotenv[key] ?: System.getenv(key) ?: '').toString() }
+
+def mcVersion = project.minecraft_version
+def loader = project.mod_loader                         // "forge" or "neoforge"
+def displayVersion = "${project.mod_version}+mc${mcVersion}-${loader}"
+def dryRunEnabled = (project.findProperty('publishDryRun') ?: 'false').toString().toBoolean()
+def gitBranch = providers.exec { commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD' }
+        .standardOutput.asText.map { it.trim() }
+
+publishMods {
+    file = tasks.named('jar', Jar).flatMap { it.archiveFile }
+    displayName = "Create: Blueprinted ${project.mod_version} (MC ${mcVersion} ${loader})"
+    version = displayVersion
+    changelog = providers.provider {
+        def cl = rootProject.file('CHANGELOG.md')
+        cl.exists() ? cl.text : "Create: Blueprinted ${project.mod_version} for Minecraft ${mcVersion} (${loader})."
+    }
+    modLoaders.add(loader)
+    type = STABLE
+    dryRun = dryRunEnabled
+
+    modrinth {
+        projectId = cred('MODRINTH_PROJECT_ID')
+        accessToken = cred('MODRINTH_TOKEN')
+        minecraftVersions.add(mcVersion)
+        requires { slug = 'create' }
+    }
+    curseforge {
+        projectId = cred('CURSE_PROJECT_ID')
+        accessToken = cred('CURSE_TOKEN')
+        minecraftVersions.add(mcVersion)
+        clientRequired = true
+        serverRequired = false
+        requires { slug = 'create' }
+    }
+    github {
+        repository = 'salem-5/Create-Blueprinted'
+        accessToken = cred('GITHUB_TOKEN')
+        commitish = gitBranch
+        tagName = "v${project.mod_version}-${loader}-${mcVersion}"
+    }
+}
+
+// On legacy Forge the published jar must be reobfuscated to SRG first (MDG rewrites it in place).
+tasks.named('publishMods').configure {
+    if (tasks.findByName('reobfJar')) dependsOn('reobfJar')
+}
+
+// Sync README.md -> Modrinth project description (CurseForge has no public description API).
+tasks.register('syncModrinthDescription') {
+    group = 'publishing'
+    description = 'Push README.md to the Modrinth project body'
+    doLast {
+        def token = cred('MODRINTH_TOKEN')
+        def projectId = cred('MODRINTH_PROJECT_ID')
+        if (!token || !projectId) throw new GradleException('MODRINTH_TOKEN / MODRINTH_PROJECT_ID missing (set them in .env)')
+        def readme = rootProject.file('README.md').text
+        def payload = groovy.json.JsonOutput.toJson([body: readme])
+        if (dryRunEnabled) {
+            logger.lifecycle("[dry-run] would PATCH Modrinth project ${projectId} body (${readme.length()} chars)")
+            return
+        }
+        def http = java.net.http.HttpClient.newHttpClient()
+        def req = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create("https://api.modrinth.com/v2/project/${projectId}"))
+                .header('Authorization', token)
+                .header('Content-Type', 'application/json')
+                .header('User-Agent', 'salem-5/Create-Blueprinted (publish.gradle)')
+                .method('PATCH', java.net.http.HttpRequest.BodyPublishers.ofString(payload))
+                .build()
+        def resp = http.send(req, java.net.http.HttpResponse.BodyHandlers.ofString())
+        if (resp.statusCode() >= 300) throw new GradleException("Modrinth body update failed: ${resp.statusCode()} ${resp.body()}")
+        logger.lifecycle("Modrinth description updated (HTTP ${resp.statusCode()}).")
+    }
+}
+
+// Keep the Modrinth page description in sync whenever we publish.
+tasks.named('publishMods').configure { finalizedBy('syncModrinthDescription') }
