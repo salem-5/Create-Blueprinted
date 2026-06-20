@@ -3,7 +3,7 @@
 // Applied from build.gradle after the mod-publish-plugin is on the plugins classpath.
 //
 //   ./gradlew publishMods --dry-run        # validate the task graph, upload nothing
-//   ./gradlew publishMods                  # upload this branch's version to CurseForge + Modrinth + GitHub
+//   ./gradlew publishMods                  # upload this branch's version to CurseForge + Modrinth
 //   ./gradlew publishMods -PpublishDryRun=true   # run the task but skip the real uploads
 //   ./gradlew syncModrinthDescription      # push README.md to the Modrinth project body
 
@@ -23,8 +23,6 @@ def mcVersion = project.minecraft_version
 def loader = project.mod_loader                         // "forge" or "neoforge"
 def displayVersion = "${project.mod_version}+mc${mcVersion}-${loader}"
 def dryRunEnabled = (project.findProperty('publishDryRun') ?: 'false').toString().toBoolean()
-def gitBranch = providers.exec { commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD' }
-        .standardOutput.asText.map { it.trim() }
 
 publishMods {
     file = tasks.named('jar', Jar).flatMap { it.archiveFile }
@@ -51,12 +49,6 @@ publishMods {
         clientRequired = true
         serverRequired = false
         requires { slug = 'create' }
-    }
-    github {
-        repository = 'salem-5/Create-Blueprinted'
-        accessToken = cred('GITHUB_TOKEN')
-        commitish = gitBranch
-        tagName = "v${project.mod_version}-${loader}-${mcVersion}"
     }
 }
 
