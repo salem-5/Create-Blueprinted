@@ -75,10 +75,10 @@ public abstract class SchematicTableScreenMixin extends Screen {
                 boolean ctrlActive = Screen.hasControlDown() && !SchematicTableScreenMixin.this.brassworks$ctrlWasDownOnInit;
 
                 this.toolTip.clear();
-                this.toolTip.add(Component.translatable("create_blueprinted.gui.schematic_table.render_button.title").withColor(UiHelpers.DARK_BLUE_TEXT_COLOR));
+                this.toolTip.add(Component.translatable("create_blueprinted.gui.schematic_table.render_button.title").withStyle(s -> s.withColor(UiHelpers.DARK_BLUE_TEXT_COLOR)));
 
                 var resComponent = Component.translatable("create_blueprinted.gui.schematic_table.render_button.res").withStyle(ChatFormatting.GRAY)
-                        .append(Component.literal(shiftActive ? "2048" : "1024").withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR));
+                        .append(Component.literal(shiftActive ? "2048" : "1024").withStyle(s -> s.withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR)));
 
                 if (!shiftActive) {
                     resComponent.append(Component.translatable("create_blueprinted.gui.schematic_table.render_button.res.hint",
@@ -88,7 +88,7 @@ public abstract class SchematicTableScreenMixin extends Screen {
                 this.toolTip.add(resComponent);
 
                 var dirComponent = Component.translatable("create_blueprinted.gui.schematic_table.render_button.dir").withStyle(ChatFormatting.GRAY)
-                        .append(Component.translatable(ctrlActive ? "create_blueprinted.gui.schematic_table.render_button.dir.left" : "create_blueprinted.gui.schematic_table.render_button.dir.right").withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR));
+                        .append(Component.translatable(ctrlActive ? "create_blueprinted.gui.schematic_table.render_button.dir.left" : "create_blueprinted.gui.schematic_table.render_button.dir.right").withStyle(s -> s.withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR)));
 
                 if (!ctrlActive) {
                     dirComponent.append(Component.translatable("create_blueprinted.gui.schematic_table.render_button.dir.hint",

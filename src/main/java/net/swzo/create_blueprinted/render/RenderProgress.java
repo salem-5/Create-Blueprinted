@@ -5,8 +5,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.swzo.create_blueprinted.util.UiHelpers;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,7 +55,8 @@ public final class RenderProgress {
     }
 
     @SubscribeEvent
-    public static void onClientTick(ClientTickEvent.Post event) {
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         State state = STATE.get();
         if (state == null) return;
 
@@ -88,11 +89,11 @@ public final class RenderProgress {
                 : "create_blueprinted.render.progress.rendering";
 
         MutableComponent message = Component.translatable(labelKey, name)
-                .withColor(UiHelpers.DARK_BLUE_TEXT_COLOR);
+                .withStyle(s -> s.withColor(UiHelpers.DARK_BLUE_TEXT_COLOR));
         message.append(Component.literal(" " + bar).withStyle(Style.EMPTY.withColor(barColor)));
         if (!failed) {
             message.append(Component.literal(" " + Math.round(clamped * 100f) + "%")
-                    .withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR));
+                    .withStyle(s -> s.withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR)));
         }
         return message;
     }

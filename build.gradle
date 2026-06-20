@@ -1,8 +1,7 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.140'
     id 'idea'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.140'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -14,44 +13,35 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
-    maven {url = "https://mvn.devos.one/snapshots" } // Registrate
-    maven {url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
+    maven { url = "https://maven.tterrag.com/" }        // Registrate
+    maven { url = "https://mvn.devos.one/snapshots" }   // Registrate (snapshots)
+    maven { url = "https://maven.createmod.net" }       // Create, Ponder, Flywheel, Catnip
+    maven { url = "https://maven.minecraftforge.net/" } // Forge
 }
 
 base { archivesName = mod_id }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-neoForge {
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-    version = project.neo_version
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
+legacyForge {
+    version = project.forge_version
+
     runs {
         client {
             client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
         }
-
         server {
             server()
             programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-        gameTestServer {
-            type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-        data {
-            data()
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
         }
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }
+
     mods {
         "${mod_id}" {
             sourceSet(sourceSets.main)
@@ -59,21 +49,34 @@ neoForge {
     }
 }
 
-dependencies {
-    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
-    implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
-    implementation("com.tterrag.registrate:Registrate:${registrate_version}")
-    compileOnly   ("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
-    runtimeOnly   ("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+dependencies {
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    // Create's Forge artifacts are published in SRG (production) mappings, so they must go through
+    // ModDevGradle's remapping configurations (mod*) to be usable against the official-named dev MC.
+    // These configurations are NOT transitive — catnip is bundled inside the Ponder jar.
+    modImplementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    modImplementation("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")
+    modImplementation("com.tterrag.registrate:Registrate:${registrate_version}")
+    modCompileOnly   ("dev.engine-room.flywheel:flywheel-forge-api-${minecraft_version}:${flywheel_version}")
+    modRuntimeOnly   ("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
+
+    // Create's mixins use MixinExtras (@WrapOperation). NeoForge bundles it; Forge does not, and the
+    // :slim Create jar strips it, so we supply it ourselves. Pure bytecode lib (no MC refs) — it
+    // self-bootstraps via its MixinConnector, so a plain runtime dependency is enough.
+    runtimeOnly("io.github.llamalad7:mixinextras-forge:${mixinextras_version}")
+}
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     def properties = new Properties()
     def file = file("gradle.properties")
-    if(file.exists()) {
-        file.withInputStream { properties.load(it)}
+    if (file.exists()) {
+        file.withInputStream { properties.load(it) }
     }
     def replaceProperties = properties.collectEntries { key, value ->
         [(key): value]
@@ -86,11 +89,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     into "build/generated/sources/modMetadata"
 }
 sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
-publishing {
-    publications {register('mavenJava', MavenPublication) {from components.java}}
-    repositories {maven {url "file://${project.projectDir}/repo"}}
-}
+
 idea {
     module {
         downloadSources = true

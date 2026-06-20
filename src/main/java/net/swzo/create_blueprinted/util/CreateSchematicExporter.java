@@ -5,7 +5,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -106,12 +105,12 @@ public class CreateSchematicExporter {
 
         if (!Files.exists(schematicPath)) {
             source.sendFailure(Component.translatable("create_blueprinted.command.renderschem.not_found", filename)
-                    .withColor(UiHelpers.ERROR_PRIMARY));
+                    .withStyle(s -> s.withColor(UiHelpers.ERROR_PRIMARY)));
             return;
         }
 
         source.sendSuccess(() -> Component.translatable("create_blueprinted.command.renderschem.starting", filename)
-                .withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR), false);
+                .withStyle(s -> s.withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR)), false);
 
         RenderProgress.start(filename);
         ProgressListener progress = stage -> RenderProgress.stage(stage, filename);
@@ -119,7 +118,7 @@ public class CreateSchematicExporter {
         CompletableFuture.supplyAsync(() -> {
                     progress.accept(RenderProgress.Stage.PARSING);
                     try (InputStream inputStream = Files.newInputStream(schematicPath)) {
-                        return NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
+                        return NbtIo.readCompressed(inputStream);
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to read NBT file.", e);
                     }
@@ -134,7 +133,7 @@ public class CreateSchematicExporter {
                         mc.execute(() -> {
                             RenderProgress.success(filename);
                             Component successMsg = Component.translatable("create_blueprinted.command.renderschem.success")
-                                    .withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR)
+                                    .withStyle(s -> s.withColor(UiHelpers.LIGHT_BLUE_TEXT_COLOR))
                                     .append(Component.literal(outputFile.getName())
                                             .withStyle(Style.EMPTY
                                                     .withColor(UiHelpers.DARK_BLUE_TEXT_COLOR)
@@ -151,11 +150,11 @@ public class CreateSchematicExporter {
                         RenderProgress.fail(filename);
                         if (ex instanceof TimeoutException || ex.getCause() instanceof TimeoutException) {
                             source.sendFailure(Component.translatable("create_blueprinted.command.renderschem.timeout")
-                                    .withColor(UiHelpers.ERROR_PRIMARY));
+                                    .withStyle(s -> s.withColor(UiHelpers.ERROR_PRIMARY)));
                         } else {
                             Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                             source.sendFailure(Component.translatable("create_blueprinted.command.renderschem.error", cause.getMessage())
-                                    .withColor(UiHelpers.ERROR_PRIMARY));
+                                    .withStyle(s -> s.withColor(UiHelpers.ERROR_PRIMARY)));
                             CB.LOGGER.error("Exception Thrown: ", ex);
                         }
                     });

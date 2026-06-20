@@ -23,40 +23,55 @@ final class PoseAppliedVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public VertexConsumer addVertex(float x, float y, float z) {
-        pose.transformPosition(x + offX, y + offY, z + offZ, scratch);
-        delegate.addVertex(scratch.x(), scratch.y(), scratch.z());
+    public VertexConsumer vertex(double x, double y, double z) {
+        pose.transformPosition((float) x + offX, (float) y + offY, (float) z + offZ, scratch);
+        delegate.vertex(scratch.x(), scratch.y(), scratch.z());
         return this;
     }
 
     @Override
-    public VertexConsumer setNormal(float x, float y, float z) {
+    public VertexConsumer normal(float x, float y, float z) {
         normal.transform(x, y, z, scratch);
-        delegate.setNormal(scratch.x(), scratch.y(), scratch.z());
+        delegate.normal(scratch.x(), scratch.y(), scratch.z());
         return this;
     }
 
     @Override
-    public VertexConsumer setColor(int red, int green, int blue, int alpha) {
-        delegate.setColor(red, green, blue, alpha);
+    public VertexConsumer color(int red, int green, int blue, int alpha) {
+        delegate.color(red, green, blue, alpha);
         return this;
     }
 
     @Override
-    public VertexConsumer setUv(float u, float v) {
-        delegate.setUv(u, v);
+    public VertexConsumer uv(float u, float v) {
+        delegate.uv(u, v);
         return this;
     }
 
     @Override
-    public VertexConsumer setUv1(int u, int v) {
-        delegate.setUv1(u, v);
+    public VertexConsumer overlayCoords(int u, int v) {
+        delegate.overlayCoords(u, v);
         return this;
     }
 
     @Override
-    public VertexConsumer setUv2(int u, int v) {
-        delegate.setUv2(u, v);
+    public VertexConsumer uv2(int u, int v) {
+        delegate.uv2(u, v);
         return this;
+    }
+
+    @Override
+    public void endVertex() {
+        delegate.endVertex();
+    }
+
+    @Override
+    public void defaultColor(int red, int green, int blue, int alpha) {
+        delegate.defaultColor(red, green, blue, alpha);
+    }
+
+    @Override
+    public void unsetDefaultColor() {
+        delegate.unsetDefaultColor();
     }
 }

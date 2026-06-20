@@ -2,7 +2,8 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.swzo.create_blueprinted.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_13",
+  "refmap": "create_blueprinted.refmap.json",
   "mixins": [
   ],
   "client": [
