@@ -20,12 +20,20 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class CreateSchematicExporter {
+
+    private static final ExecutorService PIPELINE = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "create-blueprinted-render");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     public interface ProgressListener extends Consumer<RenderProgress.Stage> {
         ProgressListener NOOP = stage -> {};
@@ -42,7 +50,7 @@ public class CreateSchematicExporter {
         return CompletableFuture.supplyAsync(() -> {
                     listener.accept(RenderProgress.Stage.BUILDING);
                     return SchematicRenderHandle.bake(tag);
-                })
+                }, PIPELINE)
                 .exceptionallyCompose(ex -> {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     if (cause instanceof IllegalStateException) {
@@ -61,7 +69,7 @@ public class CreateSchematicExporter {
                         }
                     });
                 })
-                .thenApplyAsync(image -> ssaa == 1 ? image : downsample(image, ssaa));
+                .thenApplyAsync(image -> ssaa == 1 ? image : downsample(image, ssaa), PIPELINE);
     }
 
     private static NativeImage downsample(NativeImage source, int factor) {
@@ -122,7 +130,7 @@ public class CreateSchematicExporter {
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to read NBT file.", e);
                     }
-                })
+                }, PIPELINE)
                 .thenCompose(tag -> renderSchematicImage(tag, settings, progress))
                 .thenAcceptAsync(image -> {
                     progress.accept(RenderProgress.Stage.SAVING);
@@ -145,7 +153,7 @@ public class CreateSchematicExporter {
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to save rendered image.", e);
                     }
-                }).orTimeout(2, TimeUnit.MINUTES).exceptionally(ex -> {
+                }, PIPELINE).orTimeout(2, TimeUnit.MINUTES).exceptionally(ex -> {
                     mc.execute(() -> {
                         RenderProgress.fail(filename);
                         if (ex instanceof TimeoutException || ex.getCause() instanceof TimeoutException) {
