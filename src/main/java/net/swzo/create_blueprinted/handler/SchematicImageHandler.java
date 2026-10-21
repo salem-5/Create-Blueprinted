@@ -11,6 +11,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.PngInfo;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.neoforge.common.NeoForge;
 import net.swzo.create_blueprinted.CreateBlueprinted;
 import net.swzo.create_blueprinted.api.RenderSchematicImageEvent;
@@ -134,14 +136,17 @@ public class SchematicImageHandler {
     private CompletableFuture<byte[]> renderAndDownsample(Action action) {
         if (renderSupplier == null) attachToSchematicName();
 
+        Minecraft client = Minecraft.getInstance();
         SchematicRenderSettings settings = settingsBuilder.build();
         int ssaa = settings.antialiasingFactor();
 
         if (shouldSendActionProgress(action)) ImageActionProgress.start(schematicName);
 
-        Minecraft client = Minecraft.getInstance();
-        return CompletableFuture.supplyAsync(() -> renderSupplier.get(), PIPELINE)
-                .thenCompose(renderer -> firePreRenderEvent(renderer, action, client))
+        CompletableFuture<SchematicImageRenderer> bakingFuture = isModLoaded("c2me") ?
+                CompletableFuture.completedFuture(renderSupplier.get()) :
+                CompletableFuture.supplyAsync(() -> renderSupplier.get(), PIPELINE);
+
+        return bakingFuture.thenCompose(renderer -> firePreRenderEvent(renderer, action, client))
                 .thenCompose(renderer -> onRenderThread(() -> render(renderer, action)))
                 .thenApplyAsync(image -> ssaa == 1 ? image : downsample(image, ssaa), PIPELINE)
                 .thenApply(this::convertToByteArray)

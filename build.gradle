@@ -16,7 +16,7 @@ group = mod_group_id
 repositories {
     mavenLocal()
     maven { url = "https://mvn.devos.one/snapshots" } // Registrate
-    maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
+    maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel, C2ME
     maven { url = "https://api.modrinth.com/maven" } // Create Schematic Preview
     maven { url = "https://maven.terraformersmc.com/releases" } // EMI
     maven { url = "https://maven.blamejared.com" } // JEI

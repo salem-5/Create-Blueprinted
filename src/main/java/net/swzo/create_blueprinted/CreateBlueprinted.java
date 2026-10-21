@@ -14,6 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -48,6 +49,10 @@ public class CreateBlueprinted {
         // Only use these for testing...
         // ShareProviderRegistry.register(beanProvider);
         // ShareProviderRegistry.register(foxProvider);
+    }
+
+    public static boolean isModLoaded(String modId) {
+        return LoadingModList.get().getModFileById(modId) != null;
     }
 
     public static ResourceLocation rl(String path) {

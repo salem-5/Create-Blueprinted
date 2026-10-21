@@ -75,7 +75,8 @@ public interface ShareProvider {
      * @param imageByteArray The rendered PNG schematic image in a byte array format
      * @return A future which holds a reference to a URL representing the location the image has been shared or null if the operation failed.
      *         You can also return null if you implemented your own custom renderer. In which case this method won't be called.
-     *         The future has a deadline of 600 ticks (about 30s) and will cancel if no value is returned within this timeframe.
+     *         The futures deadline is determined by {@link ShareProvider#timeout()} and will cancel automatically if no value
+     *         is returned within this timeframe.
      */
     default Future<@Nullable URL> onRender(ResourceLocation handlerId, String schematicName, SchematicRenderSettings renderSettings, byte[] imageByteArray) { return CompletableFuture.completedFuture(null); }
 
